@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en" dir="rtl">
+<head>
+  <meta charset="UTF-8" >
+  <title>Loaners Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    rel="stylesheet"
+  >
+
+  <style>
+    body {
+      background: #f0f2f5;
+      font-family: system-ui, sans-serif;
+    }
+    .dashboard-card {
+      background: #fff;
+      border-radius: .75rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .table thead {
+      background: #0d6efd;
+      color: #fff;
+    }
+    .table-striped > tbody > tr:nth-of-type(odd) {
+      background: #f8f9fa;
+    }
+    .btn-icon {
+      width: 2rem;
+      height: 2rem;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      border-radius: .75rem;
+    }
+    .modal-header {
+      background: #0d6efd;
+      color: #fff;
+      border-bottom: none;
+      border-radius: .75rem .75rem 0 0;
+    }
+    .modal-footer {
+      border-top: none;
+      border-radius: 0 0 .75rem .75rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container py-5">
+    
+    <!-- Header -->
+   <div class="p-4 mb-4 rounded-3 shadow-sm text-white text-center" style="background: linear-gradient(to left, #0d6efd, #198754);">
+  
+  <!-- Title -->
+  <h1 class="display-5 fw-bold mb-4">
+    🏦 معرض الفهد
+  </h1>
+
+  <!-- Action Row -->
+  <div class="d-flex flex-wrap justify-content-center align-items-center gap-3">
+    
+    <!-- Search Bar -->
+    <form method="GET" class="d-flex align-items-center">
+      <input type="text" name="q" value="{{ query }}" class="form-control me-2" placeholder="🔍 ابحث بالاسم">
+      <button type="submit" class="btn btn-outline-light">بحث</button>
+    </form>
+
+    <!-- Add Loaner Button -->
+    <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#createLoanerModal">
+      <i class="bi bi-plus-lg"></i> اضافة مقرض جديد
+    </button>
+
+    <!-- Logout Button -->
+    <a href="{% url 'logout' %}" class="btn btn-danger">
+      🚪 تسجيل الخروج
+    </a>
+
+  </div>
+</div>
+
+    <!-- Loaners Table -->
+    <div class="dashboard-card overflow-hidden">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0">
+          <thead>
+            <tr>
+              <th>التسلسل</th>
+              <th>الاسم</th>
+              <th>المبلغ الكلي</th>
+              <th>تاريخ الانشاء</th>
+              <th class="text-center">المعلومات</th>
+              <th class="text-center">حذف</th>
+            </tr>
+          </thead>
+          <tbody id="loanersTbody">
+
+            <!-- Example row (remove or replace dynamically) -->
+            
+            {% for loaner in page_obj %}
+            
+
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{loaner.name}}</td>
+              <td>{{loaner.total_amount}}</td>
+              <td>{{loaner.date_created}}</td>
+              <td class="text-center">
+                <a href="{% url 'payment' loaner.id %}" class="btn btn-info btn-icon" title="Show Details">
+                  <i class="bi bi-eye-fill"></i>
+                </a>
+              </td>
+              <!-- delete btn -->
+              <td class="text-center">
+                <td class="text-center">
+                <form method="POST" action="{% url 'delete_loaner' loaner.id %}" onsubmit="return confirm('⚠️ هل أنت متأكد أنك تريد حذف هذا المقرض؟');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-icon" title="Delete">
+                    <i class="bi bi-trash-fill"></i>
+                  </button>
+                </form>
+              </td>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <br>
+        <nav aria-label="Page navigation">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابق</a>
+      </li>
+    {% endif %}
+
+    <li class="page-item active">
+      <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    </li>
+
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالي</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Loaner Modal -->
+  <div
+    class="modal fade"
+    id="createLoanerModal"
+    tabindex="-1"
+    aria-labelledby="createLoanerModalLabel"
+    aria-hidden="true"
+  >
+  
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form id="createLoanerForm" class="modal-content" action="{% url 'main' %}" method="POST">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="createLoanerModalLabel">
+            اضافة مقرض جديد
+          </h5>
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="loanerName" class="form-label fw-semibold">
+                اسم المقرض
+              </label>
+              <input
+                type="text"
+                id="loanerName"
+                name="name"
+                class="form-control form-control-lg"
+                placeholder="e.g. John Doe"
+                required>
+            </div>
+            <div class="col-md-6">
+              <label for="loanerAmount" class="form-label fw-semibold">
+                المبلغ الكلي
+              </label>
+              <input
+                  type="number"
+                  id="loanerAmount"
+                  name="total_amount"
+                  class="form-control form-control-lg"
+                  placeholder="e.g. 150000"
+                  required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success px-4">
+            💾 حفظ
+          </button>
+          <button type="button"class="btn btn-secondary px-4"data-bs-dismiss="modal">رجوع</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS Bundle -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+  ></script>
+  <script>
+    function confirmDelete(id) {
+      if (confirm("⚠️ هل أنت متأكد من حذف هذا المقرض؟")) {
+        console.log("Will delete ID:", id);
+        // later: window.location.href = `/delete/${id}/`
+      }
+    }
+  </script>
+</body>
+</html>

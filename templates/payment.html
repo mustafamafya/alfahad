@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+      <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link
+href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    rel="stylesheet"
+  >
+</head>
+<body>
+  {% if messages %}
+  <div class="mb-3">
+    {% for message in messages %}
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+<div class="card shadow-lg rounded mb-5 border-0">
+  <!-- Header with Loaner Name and Creation Date -->
+  <div class="p-4 mb-4 rounded-3 shadow text-white" style="background: linear-gradient(to left, #0d6efd, #198754);">
+  <div class="row g-3 align-items-center">
+    <!-- Main Title -->
+    <div class="col-12">
+      <h1 class="fw-bold mb-1">🏦 معرض الفهد</h1>
+      <br>
+      <h4 class="fw-semibold text-light">📄 صفحة التسديد</h4>
+    </div>
+
+    <div class="row g-3 text-white fw-semibold mb-4">
+  <div class="col-md-6 col-lg-3">
+    👤 اسم المقترض: <span class="fw-bold text-warning">{{ loaner.name }}</span>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    📅 تاريخ الإنشاء: <span class="fw-bold text-warning">{{ loaner.date_created|date:"Y-m-d" }}</span>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    💰 المبلغ الكلي: <span class="fw-bold text-warning">{{ loaner.total_amount }}</span>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    ✅ مجموع المدفوع: <span class="fw-bold text-warning">{{ total_received }}</span>
+  </div>
+</div>
+  </div>
+</div>
+
+  <div class="card-body bg-light">
+    <!-- Add Payment Button (Triggers Modal) -->
+<div class="mb-4 text-end">
+  <button type="button" class="btn btn-success fw-semibold px-4" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+    💸 اضافة دفعة
+  </button>
+</div>
+    <!-- Add Payment Modal -->
+<div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <form method="POST" action="{% url 'payment' loaner.id %}">
+        {% csrf_token %}
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="addPaymentModalLabel">اضافة دفعة جديدة</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="receivedAmount" class="form-label">المبلغ المدفوع</label>
+            <input type="number" name="recieved" class="form-control" id="receivedAmount" placeholder="ادخل المبلغ" required>
+          </div>
+          <div class="modal-body">
+          <label for="payment_date" class="form-label">تاريخ التسديد</label>
+          <input type="date" name="payment_date" class="form-control" id="payment_date" required>
+          </div>
+          
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">💸 حفظ الدفعة</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">❌ الغاء</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+    <!-- Payment Summary Table -->
+    <div class="table-responsive">
+      <table class="table table-striped table-hover text-center align-middle bg-white shadow-sm rounded">
+        <thead class="table-primary">
+          <tr>
+            <th>الواصل </th>
+            <th>الباقي</th>
+            <th> الشهر</th>
+            <th>حذف</th>
+            <th>ايصال</th>
+          </tr>
+          
+        </thead>
+        <tbody>
+          {% for payment in payments %}
+          <tr>
+            <td class="text-success fw-semibold">{{ payment.recieved }}</td>
+            <td class="text-danger fw-semibold">{{ payment.remaining }}</td>
+            <td>{{ payment.payment_date|date:"Y-m-d " }}</td>
+            <td>
+              <form method="POST" action="{% url 'delete_payment' payment.id %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill">
+                  🗑️ حذف
+                </button>
+              </form>
+            </td>
+            <td>
+             <a href="{% url 'print_card' loaner.id %}" class="btn btn-outline-secondary btn-sm rounded-pill">
+                🧾 إيصال
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="table-secondary">
+            <th>المجموع الواصل</th>
+            <th>المبلغ الكلي</th>
+            <th>تاريخ الإنشاء</th>
+            <th></th>
+            <th>اسم المقرض</th>
+          </tr>
+          <tr class="table-light fw-bold">
+            <td class="text-success">{{ total_received }}</td>
+            <td class="text-primary">{{ loaner.total_amount }}</td>
+            <td>{{ loaner.date_created|date:"Y-m-d" }}</td>
+            <td></td>
+            <td class="text-muted small">{{ loaner.name }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="mb-4 text-start">
+        <a href="{% url 'main' %}" class="btn btn-outline-secondary">
+          🔙 رجوع إلى القائمة
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+  ></script>
+</body>
+</html>
