@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-asb&!j(7(sp^ktuvwrc=bsib2mg6%egxlx93_@cpexh!*^7#sd
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['alfahad.onrender.com']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost').split(',')
 
 
 # Application definition
